@@ -1,0 +1,313 @@
+
+
+import os
+import pickle
+import random
+
+
+class Medico:
+    def __init__(self,numero,nombre,cuota,especialidad,provincia):
+        self.numero = numero
+        self.nombre = nombre
+        self.cuota = cuota
+        self.especialidad = especialidad
+        self.provincia = provincia
+
+
+
+def to_string(med):
+
+    ret = 'Numero: {:<10} Nombre: {:<20} Cuota: {:<10} Especialidad: {:<5} Provincia: {:<5} '
+
+    return ret.format(med.numero,med.nombre,med.cuota,med.especialidad,med.provincia)
+
+
+def validar_entre(men, may, mensaje):
+
+    x = int(input(mensaje))
+
+    while x < men or x > may:
+
+        print('► | Valor ingresado incorrecto. Ingreselo Nuevamente. |')
+
+        x = int(input(mensaje))
+
+    return x
+
+
+def validar_pos(men,mensaje):
+    x = int(input(mensaje))
+    
+    while x <= men:
+        print('◄ Ingreso Erroñeo. Ingreselo Nuevamente.')
+        x = int(input(mensaje))   
+    
+    return x
+
+
+def cargaAutom1(fd, cant):
+
+    m = open(fd,'ab')
+
+    nombres = ['Carlos','Juan','Alexis','Fernanda','Mirtha','Guillermo','Raquel','Florencia','Lautaro']
+
+    for i in range(cant):
+        numero= random.randint(1,500)
+        nombre= nombres[random.randrange(len(nombres))]+str(i)
+        cuota= random.randint(0,1500)
+        especialidad= random.randint(0,9)
+        provincia= random.randint(0,21)
+
+        pickle.dump(Medico(numero,nombre,cuota,especialidad,provincia),m)
+        m.flush()
+    m.close()
+    print()
+    print('¶ | Archivo Generado Automaticamente. ')
+    print()
+
+
+
+def cargaManual1(fd, cant):
+
+    m = open(fd,'ab')
+
+    for i in range(cant):
+        numero= validar_pos(0,'► Ingrese Numero de DNI: ')
+        nombre= input('► Ingrese Nombre de Medico: ')
+        cuota= validar_pos(-1,'► Ingrese importe que paga por mes: ')
+        especialidad= validar_entre(0,19,'► Ingrese especialidad: ')
+        provincia= validar_entre(0,21,'► Ingrese provincia de orige: ')
+
+        pickle.dump(Medico(numero,nombre,cuota,especialidad,provincia),m)
+        m.flush()
+    m.close()
+    print()
+    print('¶ | Archivo Generado ')
+    print()
+
+
+
+def opcion1(cant,fd):
+
+
+
+    eleccion = validar_entre(0,1,'Elegir metodo para carga de datos(0 Automatico)(1 Manual): ')
+
+    if eleccion == 0:
+        cargaAutom1(fd,cant)
+    else:
+        cargaManual1(fd,cant)
+
+
+def opcion2(fd):
+
+    if not os.path.exists(fd):
+
+        print('► | Archivo Inexistente. Volviendo al menu principal. |')
+        print()
+        return
+
+    m = open(fd,'rb')
+    t = os.path.getsize(fd)
+    while m.tell()< t:
+        reg = pickle.load(m)
+        print(to_string(reg))
+
+
+def add_in_order(vec, can):
+
+    pos = len(vec)
+    izq, der = 0, len(vec) - 1
+    while izq <= der:
+        c = (izq + der) // 2
+        if can.numero == vec[c].numero:
+            pos = c
+            break
+        if can.numero < vec[c].numero:
+            der = c - 1
+        else:
+            izq = c + 1
+    if izq > der:
+        pos = izq
+    vec[pos:pos] = [can]
+
+
+def opcion3(fd):
+
+    vec = []
+
+    if not os.path.exists(fd):
+
+        print('► | Archivo Inexistente. Volviendo al menu principal. Es necesario la OPCION 1 para poder continuar. |')
+        print()
+        return
+
+    m = open(fd,'rb')
+    t = os.path.getsize(fd)
+    while m.tell() < t:
+
+        med = pickle.load(m)
+        if not med.cuota == 0:
+
+            add_in_order(vec,med)
+
+    print()
+    print('¶ | Arreglo Generado Satisfactoriamente.')
+    print()
+    return vec
+
+
+def opcion4(vec):
+
+    for i in range(len(vec)):
+        print(to_string(vec[i]))
+
+
+def busqueda_binary(x, v):
+
+    pos = len(v)
+    izq,der = 0,len(v)-1
+    while izq<=der:
+        c = (izq+der)//2
+        if x == v[c].numero and v[c].provincia == 1:
+            return c
+        elif x < v[c].numero:
+            der = c-1
+        else:
+            izq = c+1
+    return -1
+
+
+def opcion5(x,vec):
+
+    res = busqueda_binary(x,vec)
+
+    if not res == -1:
+
+        diez_x_ciento = (10*vec[res].cuota)//100
+        vec[res].cuota += diez_x_ciento
+        print()
+        print(to_string(vec[res]))
+        print()
+    else:
+        print()
+        print('◄ | Medico no encontrado. Volviendo al menu principal. | ')
+        print()
+
+
+def opcion6(vec, nom):
+    encontrado = False
+    for i in range(len(vec)):
+        if vec[i].nombre == nom:
+            print('◄ | Medico Encontrado <=>')
+            print()
+            print(to_string(vec[i]))
+            print()
+            encontrado = True
+            break
+    if not encontrado:
+        print()
+        print('◄ | Medico no encontrado. Volviendo al menu principal. | ')
+        print()
+
+
+def cargaMat(mat, vec):
+
+    for i in range(len(vec)):
+
+        mat[vec[i].especialidad][vec[i].provincia]+=1
+
+    print()
+    print('¶ | Matriz Creada Correctamente. ')
+    print()
+
+
+def mostrarMat(mat):
+
+    for i in range(len(mat)):
+        for j in range(len(mat[0])):
+            if mat[i][j]!=0:
+                res = 'Fila: {:<3} Columna: {:<3} Cantidad: {:<5}'
+                print(res.format(i, j, mat[i][j]))
+
+
+def opcion7(vec):
+
+    mat = [[0]*20 for f in range(22)]
+
+    cargaMat(mat,vec)
+    mostrarMat(mat)
+
+
+def main():
+
+
+    opcion =-1
+    fd = 'medicos_af.dat'
+    ban_3 = False
+
+    while opcion!=0:
+
+        print('▬'*90)
+        print('◄ Menu de Opciones')
+        print('▬'*90)
+        print('Opcion 1 : Cargar registros en archivo.')
+        print('Opcion 2 : Mostrar archivo ejercicio 1.')
+        print('Opcion 3 : Crear arreglo de registros. ADD_IN_ORDER.')
+        print('Opcion 4 : Mostrar arreglo creado.')
+        print('Opcion 5 : Buscar y aumentar registro un 10%.')
+        print('Opcion 6 : Buscar medico nom.')
+        print('Opcion 7 : Matriz.')
+        print('Opcion 0 : Salir.')
+        print('▬'*90)
+        opcion = validar_entre(0,7,'► Ingrese opcion deseada: ')
+
+
+        if opcion == 1:
+
+            cant = validar_pos(0,'► Ingrese Cantidad de medicos a cargar:')
+            opcion1(cant,fd)
+        
+
+        elif opcion == 2 :
+
+            opcion2(fd)
+
+
+        elif opcion == 3 :
+
+            vec = opcion3(fd)
+            ban_3 = True
+
+
+        elif opcion == 4 :
+            if ban_3:
+                opcion4(vec)
+            else:
+                print('► | Vector Inexistente. Volviendo al menu principal. Es necesario la OPCION 3 para poder continuar. |')
+
+
+        elif opcion == 5 :
+            if ban_3:
+                x = validar_pos(0,'► Cargar DNI a buscar y verificar si la provincia es | 1 | y aumentar un 10% la cuota: ')
+                opcion5(x,vec)
+
+            else:
+                print('► | Vector Inexistente. Volviendo al menu principal. Es necesario la OPCION 3 para poder continuar. |')
+
+        elif opcion == 6 :
+            if ban_3:
+                nom = input('► Ingrese nombre a buscar del medico: ')
+                opcion6(vec,nom)
+            else:
+                print('► | Vector Inexistente. Volviendo al menu principal. Es necesario la OPCION 3 para poder continuar. |')
+
+        elif opcion == 7 :
+            if ban_3:
+                opcion7(vec)
+            else:
+                print('► | Vector Inexistente. Volviendo al menu principal. Es necesario la OPCION 3 para poder continuar. |')
+    else:
+        print('◘ Gracias por Haber utilizado este Programa ◘ ☺')
+
+main()
